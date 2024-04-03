@@ -1,4 +1,5 @@
 import 'package:aniwatch/anifetch.dart';
+import 'package:aniwatch/aniskip.dart';
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
@@ -14,8 +15,7 @@ class _WatchpageState extends State<Watchpage> {
   late final player = Player();
   late final controller = VideoController(player);
   late final link;
-  late final prev_link;
-  late final next_link;
+  late List skiptimes;
 
   @override
   void initState() {
@@ -26,9 +26,24 @@ class _WatchpageState extends State<Watchpage> {
     var data = ModalRoute.of(context)!.settings.arguments as List;
     link = await play(data[0], data[1], data[2]);
     print("link loaded");
-    player.open(
-      Media(link)
-    );
+    skiptimes = await getSkipTimes(data.last, data[1]);
+    player.open(Media(link));
+    player.stream.position.listen((position) {
+      var opstart = skiptimes[0];
+      var opend = skiptimes[1];
+      var edstart = skiptimes[2];
+      var edend = skiptimes[3];
+      if (position.inSeconds >= opstart && position.inSeconds <= opend-1) {
+        player.seek(Duration(seconds: opend.round()));
+      }
+      if (position.inSeconds >= edstart && position.inSeconds <= edend-1) {
+        player.seek(Duration(seconds: edend.round()));
+      }
+      if (position.inSeconds >= edend-10) {
+        link = play(data[0], data[1]+1, data[2]);
+        player.add(Media(link));
+      }
+    });
   }
 
   @override
