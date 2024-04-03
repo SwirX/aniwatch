@@ -1,7 +1,3 @@
-Sure, here's a revised version of the README for your AniWatch project:
-
----
-
 # AniWatch
 
 AniWatch is a simple mobile application built with Flutter that allows users to watch anime episodes conveniently on their devices. With a user-friendly interface and a vast collection of anime titles, AniWatch provides an enjoyable anime viewing experience.
