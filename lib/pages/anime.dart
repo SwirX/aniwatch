@@ -29,7 +29,7 @@ class _AnimepageState extends State<Animepage> {
                 title: Text("Episode ${snapshot.data![index]}"),
                 onTap: () async {
                   final ep = int.parse(snapshot.data![index]);
-                  Navigator.pushNamed(context, "/watch", arguments: [name, ep, mode]);
+                  Navigator.pushNamed(context, "/watch", arguments: [id, ep, _mode]);
                   // final shell = Shell();
                   // var res = await shell.start('nohup am start -a android.intent.action.VIEW -d "$link" -n is.xyz.mpv/.MPVActivity &');
                 },

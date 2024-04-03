@@ -203,9 +203,7 @@ Future<List> fetchLinks(sources) async {
   return links;
 }
 
-Future<String> play(String anime, int ep, String mode) async {
-  final search_res = await searchAnime(anime);
-  final id = search_res.first["id"];
+Future<String> play(String id, int ep, String mode) async {
   var sources = {};
   try {
     sources = await getSourcesUrl(id, ep);
