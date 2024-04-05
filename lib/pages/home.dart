@@ -1,4 +1,7 @@
-import 'package:aniwatch/anifetch.dart';
+import 'package:aniwatch/services/anifetch.dart';
+import 'package:aniwatch/classes/anime.dart';
+import 'package:aniwatch/services/check_update.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class Homepage extends StatefulWidget {
@@ -11,7 +14,13 @@ class Homepage extends StatefulWidget {
 TextEditingController controller = TextEditingController();
 
 class _HomepageState extends State<Homepage> {
-  List results = [];
+  List<Anime> results = [];
+  String? updateStatus;
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +32,13 @@ class _HomepageState extends State<Homepage> {
                 toggleMode();
                 setState(() {});
               },
-              child: Text(mode))
+              child: Text(mode)),
+          IconButton(
+            onPressed: () async {
+              print(await checkForUpdates());
+            },
+            icon: Icon(CupertinoIcons.cloud_download),
+          ),
         ],
       ),
       body: Column(
@@ -56,9 +71,9 @@ class _HomepageState extends State<Homepage> {
               itemBuilder: (context, index) {
                 var animeinfo = results[index];
                 return ListTile(
-                  title: Text(animeinfo["name"] ?? "No Name"),
+                  title: Text(animeinfo.name),
                   onTap: () {
-                    animeinfo["mode"] = mode;
+                    animeinfo.mode = mode;
                     Navigator.pushNamed(context, "/anime",
                         arguments: animeinfo);
                   },

@@ -1,5 +1,6 @@
 import 'dart:convert';
 // ignore: depend_on_referenced_packages
+import 'package:aniwatch/classes/skiptimes.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 
@@ -18,8 +19,8 @@ List<double> buildOptions(String skipType, Map<String, dynamic> skipMetadata) {
 
   for (dynamic result in results) {
     if (result["skip_type"] == skipType) {
-      start = result["interval"]["start_time"];
-      end = result["interval"]["end_time"];
+      start = result["interval"]["start_time"].round();
+      end = result["interval"]["end_time"].round();
     }
   }
 
@@ -55,7 +56,7 @@ Future<int> fetchMalId(String term) async {
   return id ?? -1;
 }
 
-Future<List<double>> getSkipTimes(String title, int ep) async {
+Future<SkipTimes?> getSkipTimes(String title, int ep) async {
   String agent =
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3';
 
@@ -78,18 +79,19 @@ Future<List<double>> getSkipTimes(String title, int ep) async {
         if (kDebugMode) {
           print("Skip times not found!");
         }
-        return [];
+        return null;
       }
     }
   } catch (e) {
     if (kDebugMode) {
       print("An error occurred while fetching skip times: $e");
     }
-    return [];
+    return null;
   }
 
   List<double> op = buildOptions("op", skipMd);
   List<double> ed = buildOptions("ed", skipMd);
+  double eplen = skipMd["results"][0]["episode_length"];
 
-  return [op[0], op[1], ed[0], ed[1]];
+  return SkipTimes(op: Opening(start: op[0], end: op[1]), ed: Ending(start: ed[0], end: ed[1]), epLength: eplen);
 }

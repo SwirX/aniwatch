@@ -1,4 +1,6 @@
-import 'package:aniwatch/anifetch.dart';
+import 'package:aniwatch/services/anifetch.dart';
+import 'package:aniwatch/classes/anime.dart';
+import 'package:aniwatch/widgets/episode_tile.dart';
 import 'package:flutter/material.dart';
 
 class Animepage extends StatefulWidget {
@@ -11,11 +13,9 @@ class Animepage extends StatefulWidget {
 class _AnimepageState extends State<Animepage> {
   @override
   Widget build(BuildContext context) {
-    final arguments = ModalRoute.of(context)?.settings.arguments as Map;
-    final name = arguments["name"];
-    final id = arguments["id"];
-    final _mode = arguments["mode"];
-    // final availableEps = arguments["availableEpisodes"];
+    final anime = ModalRoute.of(context)?.settings.arguments as Anime;
+    final name = anime.name;
+    final id = anime.allanime_id;
     return Scaffold(
       appBar: AppBar(
         title: Text(name),
@@ -25,15 +25,7 @@ class _AnimepageState extends State<Animepage> {
         builder: ((context, snapshot) {
           if (snapshot.hasData) {
             return ListView.builder(itemCount: snapshot.data!.length,itemBuilder: ((context, index) {
-              return ListTile(
-                title: Text("Episode ${snapshot.data![index]}"),
-                onTap: () async {
-                  final ep = int.parse(snapshot.data![index]);
-                  Navigator.pushNamed(context, "/watch", arguments: [id, ep, _mode, name]);
-                  // final shell = Shell();
-                  // var res = await shell.start('nohup am start -a android.intent.action.VIEW -d "$link" -n is.xyz.mpv/.MPVActivity &');
-                },
-              );
+              return EpisodeTile(anime: anime, ep: int.parse(snapshot.data![index]));
             }));
           } else {
             return const Center(child: CircularProgressIndicator());

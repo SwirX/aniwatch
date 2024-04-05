@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:aniwatch/classes/anime.dart';
 import 'package:http/http.dart' as http;
 
 const agent =
@@ -26,7 +27,7 @@ String decryptAllanime(String providerId) {
   return decrypted;
 }
 
-Future<List<Map<String, dynamic>>> searchAnime(String query) async {
+Future<List<Anime>> searchAnime(String query) async {
   String searchGql = '''
     query(
         \$search: SearchInput
@@ -71,8 +72,7 @@ Future<List<Map<String, dynamic>>> searchAnime(String query) async {
   final url = Uri.parse('$allanime_api/api').replace(queryParameters: params);
 
   final response = await http.get(url, headers: headers);
-
-  List<Map<String, dynamic>> animeList = [];
+  List<Anime> animelist = [];
   if (response.statusCode == 200) {
     final Map<String, dynamic> responseData = json.decode(response.body);
     if (responseData.containsKey('data') &&
@@ -81,15 +81,12 @@ Future<List<Map<String, dynamic>>> searchAnime(String query) async {
         final animeId = edge['_id'];
         final animeName = edge['name'];
         final availableEpisodes = edge['availableEpisodes'];
-        animeList.add({
-          'id': animeId,
-          'name': animeName,
-          'availableEpisodes': availableEpisodes,
-        });
+        var anime = Anime(allanime_id: animeId, name: animeName, episodes: []);
+        animelist.add(anime);
       }
     }
   }
-  return animeList;
+  return animelist;
 }
 
 Future<List> episodesList(String id) async {
