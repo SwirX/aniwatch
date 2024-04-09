@@ -1,10 +1,13 @@
-import 'package:aniwatch/services/anifetch.dart';
 import 'package:aniwatch/classes/anime.dart';
 import 'package:aniwatch/services/check_update.dart';
+import 'package:aniwatch/sevices/anilookup.dart';
+import 'package:aniwatch/widgets/results_tile.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class Homepage extends StatefulWidget {
+  // ignore: use_super_parameters
   const Homepage({key}) : super(key: key);
 
   @override
@@ -14,7 +17,7 @@ class Homepage extends StatefulWidget {
 TextEditingController controller = TextEditingController();
 
 class _HomepageState extends State<Homepage> {
-  List<Anime> results = [];
+  List<AnimeSearchResult> results = [];
   String? updateStatus;
 
   @override
@@ -29,15 +32,21 @@ class _HomepageState extends State<Homepage> {
         actions: [
           TextButton(
               onPressed: () {
-                toggleMode();
+                if (mode == "sub") {
+                  mode = "dub";
+                } else {
+                  mode = "sub";
+                }
                 setState(() {});
               },
               child: Text(mode)),
           IconButton(
             onPressed: () async {
-              print(await checkForUpdates());
+              if (kDebugMode) {
+                print(await checkForUpdates());
+              }
             },
-            icon: Icon(CupertinoIcons.cloud_download),
+            icon: const Icon(CupertinoIcons.cloud_download),
           ),
         ],
       ),
@@ -57,8 +66,10 @@ class _HomepageState extends State<Homepage> {
           ),
           TextButton(
             onPressed: () async {
-              var res = await searchAnime(controller.text);
-              print(res);
+              var res = await aniSearch(controller.text);
+              if (kDebugMode) {
+                print(res);
+              }
               setState(() {
                 results = res;
               });
@@ -70,13 +81,9 @@ class _HomepageState extends State<Homepage> {
               itemCount: results.length,
               itemBuilder: (context, index) {
                 var animeinfo = results[index];
-                return ListTile(
-                  title: Text(animeinfo.name),
-                  onTap: () {
-                    animeinfo.mode = mode;
-                    Navigator.pushNamed(context, "/anime",
-                        arguments: animeinfo);
-                  },
+                return Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: ResultsTile(anime: animeinfo),
                 );
               },
             ),

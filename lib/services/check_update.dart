@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+// ignore: depend_on_referenced_packages
 import 'package:http/http.dart' as http;
-import 'package:open_file/open_file.dart' as o_file;
+import 'package:url_launcher/url_launcher_string.dart';
 
 const endpoint = "https://api.github.com/repos/SwirX/aniwatch/releases";
 
@@ -21,9 +23,12 @@ Future<String?> checkForUpdates() async {
   final version = response["tag_name"];
   final currentversion = (await PackageInfo.fromPlatform()).version;
   if (currentversion == version) {
-    print("no updates available");
+    if (kDebugMode) {
+      print("no updates available");
+    }
     return "no updates available";
   } else {
+    // ignore: prefer_typing_uninitialized_variables
     var apkurl;
     for (var asset in assets) {
       if (asset["content_type"] == "application/vnd.android.package-archive") {
@@ -35,7 +40,7 @@ Future<String?> checkForUpdates() async {
     final bytes = res.bodyBytes;
     final file = await File(apkPath).create();
     await file.writeAsBytes(bytes);
-    o_file.OpenFile.open(apkPath);
+    launchUrlString("file:$apkPath");
     return "Updated successfully";
   }
 }

@@ -1,11 +1,12 @@
+import 'package:aniwatch/classes/anime.dart';
+import 'package:aniwatch/pages/anime.dart';
 import 'package:aniwatch/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
 
-
 void main() {
-    WidgetsFlutterBinding.ensureInitialized();
-    MediaKit.ensureInitialized();
+  WidgetsFlutterBinding.ensureInitialized();
+  MediaKit.ensureInitialized();
   runApp(const MyApp());
 }
 
@@ -16,9 +17,18 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'AniWatch',
-      routes: appRoutes,
-      initialRoute: "/",
-    );
+        theme: ThemeData.dark(),
+        title: 'AniWatch',
+        routes: appRoutes,
+        initialRoute: "/",
+        onGenerateRoute: (settings) {
+          if (settings.name == '/anime') {
+            final anime = settings.arguments as AnimeSearchResult;
+            return MaterialPageRoute(
+              builder: (context) => AnimePage(animeSearchResult: anime),
+            );
+          }
+          return null;
+        });
   }
 }
