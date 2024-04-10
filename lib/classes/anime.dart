@@ -116,8 +116,9 @@ class AnimeReference {
   String name;
   String type;
   String url;
+  String? cover;
 
-  AnimeReference({required this.id, required this.name, required this.type, required this.url});
+  AnimeReference({required this.id, required this.name, required this.type, required this.url, this.cover});
 }
 
 class AnimeRelation {

@@ -1,8 +1,6 @@
 import 'package:aniwatch/classes/anime.dart';
-import 'package:aniwatch/services/check_update.dart';
 import 'package:aniwatch/sevices/anilookup.dart';
 import 'package:aniwatch/widgets/results_tile.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -40,14 +38,6 @@ class _HomepageState extends State<Homepage> {
                 setState(() {});
               },
               child: Text(mode)),
-          IconButton(
-            onPressed: () async {
-              if (kDebugMode) {
-                print(await checkForUpdates());
-              }
-            },
-            icon: const Icon(CupertinoIcons.cloud_download),
-          ),
         ],
       ),
       body: Column(

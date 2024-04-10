@@ -1,4 +1,5 @@
 import 'package:aniwatch/classes/anime.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -66,9 +67,9 @@ class _ResultsTileState extends State<ResultsTile> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           image: DecorationImage(
-            image: Image.network(
+            image: CachedNetworkImageProvider(
               bannerUrl,
-            ).image,
+            ),
             fit: BoxFit.fill,
           ),
         ),
@@ -96,9 +97,12 @@ class _ResultsTileState extends State<ResultsTile> {
                   padding: const EdgeInsetsDirectional.fromSTEB(16, 8, 8, 8),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: Image.network(
-                      coverUrl,
-                      height: 50,
+                    child: Hero(
+                      tag: "${widget.anime.allanimeId}#cover",
+                      child: CachedNetworkImage(
+                        imageUrl: coverUrl,
+                        height: 75,
+                      ),
                     ),
                   ),
                 ),

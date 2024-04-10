@@ -1,7 +1,13 @@
 import 'package:aniwatch/classes/anime.dart';
+import 'package:aniwatch/classes/anime_progress.dart';
+import 'package:aniwatch/services/anisearch.dart';
 import 'package:aniwatch/sevices/anilookup.dart';
+import 'package:aniwatch/widgets/anime_recomandation.dart';
+import 'package:aniwatch/widgets/anime_reference.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AnimePage extends StatefulWidget {
@@ -14,17 +20,28 @@ class AnimePage extends StatefulWidget {
 }
 
 class _AnimePageState extends State<AnimePage> {
+  final userProgress = UserAnimeProgress();
   Anime? animeData;
   bool showAllTags = false;
   bool coverVisible = true;
   bool isDescriptionExpanded = false;
   Color? ambiantColor;
+  EpisodeProgress? latestProgress;
+
+  int initialRecommendationsCount = 10;
+  bool recommendationVisible = true;
+  bool episodesVisible = false;
 
   fetchdata() async {
     final anime = await aniInfo(widget.animeSearchResult);
     setState(() {
       animeData = anime;
     });
+  }
+
+  Future<Map> imagefetch(int id) async {
+    await Future.delayed(const Duration(seconds: 3));
+    return (await jikanAnimeImageFetch(id));
   }
 
   @override
@@ -52,7 +69,11 @@ class _AnimePageState extends State<AnimePage> {
 
     var colorString = animeData!.media!.cover!.color!.substring(1);
     ambiantColor = _hexToColor(colorString);
+
+    latestProgress =
+        userProgress.getLatestEpisodeProgress(animeData!.ids!.allanime);
     setState(() {});
+
     return Scaffold(
       body: CustomScrollView(
         slivers: [
@@ -67,9 +88,15 @@ class _AnimePageState extends State<AnimePage> {
               background: Stack(
                 children: [
                   Positioned.fill(
-                    child: Image.network(
-                      animeData!.media!.banner!,
+                    child: CachedNetworkImage(
                       fit: BoxFit.cover,
+                      imageUrl: animeData!.media!.banner!,
+                      progressIndicatorBuilder:
+                          (context, url, downloadProgress) =>
+                              CircularProgressIndicator(
+                                  value: downloadProgress.progress),
+                      errorWidget: (context, url, error) =>
+                          const Icon(Icons.error),
                     ),
                   ),
                   Positioned(
@@ -121,16 +148,21 @@ class _AnimePageState extends State<AnimePage> {
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(16),
-                        child: Expanded(
-                          flex: 1,
-                          child: AnimatedOpacity(
-                            opacity: coverVisible ? 1.0 : 0.0,
-                            duration: const Duration(milliseconds: 500),
-                            child: Image.network(
-                              animeData!.media!.cover!.extraLarge!,
-                              scale: .5,
+                        child: AnimatedOpacity(
+                          opacity: coverVisible ? 1.0 : 0.0,
+                          duration: const Duration(milliseconds: 500),
+                          child: Hero(
+                            tag: "${animeData!.ids!.allanime}#cover",
+                            child: CachedNetworkImage(
                               height: 200,
                               fit: BoxFit.fitHeight,
+                              imageUrl: animeData!.media!.cover!.extraLarge!,
+                              progressIndicatorBuilder:
+                                  (context, url, downloadProgress) =>
+                                      CircularProgressIndicator(
+                                          value: downloadProgress.progress),
+                              errorWidget: (context, url, error) =>
+                                  const Icon(Icons.error),
                             ),
                           ),
                         ),
@@ -163,10 +195,10 @@ class _AnimePageState extends State<AnimePage> {
                       ),
                     ],
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Expanded(
-                      flex: 3,
+                  Expanded(
+                    flex: 3,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -242,23 +274,113 @@ class _AnimePageState extends State<AnimePage> {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, "/watch",
-                      arguments: [animeData!, 1]);
-                },
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  foregroundColor: ambiantColor!,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 4,
+                    child: Padding(
+                      padding: const EdgeInsets.all(4.0),
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pushNamed(context, "/watch", arguments: [
+                            animeData!,
+                            (latestProgress?.episodeNumber ?? 0) + 1,
+                          ]);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          foregroundColor: ambiantColor!,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          textStyle: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        child: Text(
+                            'Play Episode ${(latestProgress?.episodeNumber ?? 0) + 1}'),
+                      ),
+                    ),
                   ),
-                  textStyle: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                  Expanded(
+                    flex: 1,
+                    child: Padding(
+                      padding: const EdgeInsets.all(4.0),
+                      child: ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            episodesVisible = !episodesVisible;
+                          });
+                        },
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          foregroundColor: ambiantColor!,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          textStyle: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        child: const Icon(CupertinoIcons.square_list, size: 20),
+                      ),
+                    ),
                   ),
+                ],
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Visibility(
+              visible: episodesVisible,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Episodes:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Card(
+                      elevation: 5,
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: List.generate(
+                              animeData!.episodeCount!,
+                              (index) => Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          padding: const EdgeInsets.symmetric(
+                                              vertical: 16),
+                                          foregroundColor: ambiantColor!,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(16),
+                                          ),
+                                        ),
+                                        onPressed: () {
+                                          Navigator.pushNamed(context, "/watch",
+                                              arguments: [
+                                                animeData!,
+                                                index + 1
+                                              ]);
+                                        },
+                                        child: Text("Episode ${index + 1}")),
+                                  )),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                child: const Text('Play Episode 1'),
               ),
             ),
           ),
@@ -286,13 +408,10 @@ class _AnimePageState extends State<AnimePage> {
                       animeData!.description?.replaceAll("<br><br>", "\n") ??
                           "",
                       style: const TextStyle(fontSize: 16),
-                      maxLines: isDescriptionExpanded
-                          ? null
-                          : 3, // Change the max lines to 3 when not expanded
+                      maxLines: isDescriptionExpanded ? null : 3,
                       overflow: isDescriptionExpanded
                           ? TextOverflow.visible
-                          : TextOverflow
-                              .ellipsis, // Change the overflow to ellipsis when not expanded
+                          : TextOverflow.ellipsis,
                     ),
                   ],
                 ),
@@ -399,8 +518,12 @@ class _AnimePageState extends State<AnimePage> {
                     child: Stack(
                       alignment: AlignmentDirectional.center,
                       children: [
-                        Image.network(
-                            animeData!.media?.trailer?.thumbnail?.max ?? ""),
+                        CachedNetworkImage(
+                          imageUrl:
+                              animeData!.media?.trailer?.thumbnail?.max ?? "",
+                          errorWidget: (context, url, error) =>
+                              const Icon(Icons.error),
+                        ),
                         Positioned.fill(
                           child: Container(
                             color: Colors.black.withOpacity(.3),
@@ -438,43 +561,131 @@ class _AnimePageState extends State<AnimePage> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: animeData!.relations!.map((relation) {
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${relation.relation}: [${relation.anime!.first.type}]',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: animeData!.relations!.map((relation) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 8),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: relation.anime!.map((animeRef) {
+                                return FutureBuilder(
+                                  future: animeRef.type == "anime"
+                                      ? imagefetch(animeRef.id)
+                                      : jikanMangaImageFetch(animeRef.id),
+                                  builder: (context, snapshot) {
+                                    if (!snapshot.hasData ||
+                                        snapshot.data?["data"] == null) {
+                                      return Skeletonizer(
+                                        enabled: snapshot.connectionState ==
+                                            ConnectionState.waiting,
+                                        child: const AnimeReferenceWidget(),
+                                      );
+                                    } else {
+                                      return AnimeReferenceWidget(
+                                        data: snapshot.data,
+                                        name: animeRef.name,
+                                        type: animeRef.type,
+                                        icon: CupertinoIcons.play_rectangle,
+                                        relation: relation.relation,
+                                      );
+                                    }
+                                  },
+                                );
+                              }).toList(),
                             ),
+                          ],
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // other code....
+          // Recommendation
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      // IconButton(
+                      //     onPressed: () {
+                      //       setState(() {
+                      //         recommendationVisible = !recommendationVisible;
+                      //       });
+                      //     },
+                      //     icon: recommendationVisible
+                      //         ? const Icon(CupertinoIcons.chevron_up)
+                      //         : const Icon(CupertinoIcons.chevron_down)),
+                      const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Text(
+                          'Recommandations:',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
                           ),
-                          const SizedBox(height: 8),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: relation.anime!.map((animeRef) {
-                              return GestureDetector(
-                                onTap: () {
-                                  launchUrl(Uri.parse(animeRef.url));
-                                },
-                                child: Padding(
-                                  padding: const EdgeInsets.only(bottom: 8.0),
-                                  child: Text(
-                                    animeRef.name,
-                                    style: TextStyle(
-                                      color: ambiantColor,
-                                      decoration: TextDecoration.underline,
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                          ),
-                        ],
-                      );
-                    }).toList(),
+                        ),
+                      ),
+                      const Spacer(),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: ElevatedButton(
+                            onPressed: () {
+                              // Navigate to the page that displays all recommendations
+                              Navigator.pushNamed(context, '/recommendations');
+                            },
+                            child: const Icon(CupertinoIcons.ellipsis)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Visibility(
+                    visible: recommendationVisible,
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: animeData!.relations!
+                            .take(initialRecommendationsCount)
+                            .map((relation) {
+                          return FutureBuilder<List>(
+                            future: jikanAnimeRecomandationFetch(
+                              animeData!.ids!.mal!,
+                            ),
+                            builder: (context, snapshot) {
+                              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                                return Skeletonizer(
+                                  enabled: snapshot.connectionState ==
+                                      ConnectionState.waiting,
+                                  child: const AnimeRecommandationWidget(),
+                                );
+                              } else {
+                                return Row(
+                                  children: snapshot.data!.map((entry) {
+                                    entry =
+                                        entry["entry"] as Map<String, dynamic>;
+                                    return AnimeRecommandationWidget(
+                                      data: entry,
+                                      name: entry["title"],
+                                    );
+                                  }).toList(),
+                                );
+                              }
+                            },
+                          );
+                        }).toList(),
+                      ),
+                    ),
                   ),
                 ],
               ),

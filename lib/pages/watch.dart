@@ -1,3 +1,4 @@
+import 'package:aniwatch/classes/anime_progress.dart';
 import 'package:aniwatch/classes/skiptimes.dart';
 import 'package:aniwatch/services/anifetch.dart';
 import 'package:aniwatch/services/aniskip.dart';
@@ -17,6 +18,8 @@ class WatchPage extends StatefulWidget {
 }
 
 class _WatchPageState extends State<WatchPage> {
+  final userProgress = UserAnimeProgress();
+
   late final VideoController controller;
   late final Player player;
 
@@ -25,6 +28,7 @@ class _WatchPageState extends State<WatchPage> {
   bool linkfetched = false;
   late SkipTimes skipTimes;
   String link = "";
+  String oldlink = "";
   // ignore: prefer_typing_uninitialized_variables
   late final data;
   late int episode;
@@ -57,6 +61,7 @@ class _WatchPageState extends State<WatchPage> {
           multiBtnVisible = true;
         });
       } else if (position.inSeconds >= edstart - 30 && !linkfetched) {
+        oldlink = link;
         link = await play(data[0].ids!.allanime, data[1] + 1, data[2]!);
       } else {
         setState(() {
@@ -144,14 +149,24 @@ class _WatchPageState extends State<WatchPage> {
                   child: ElevatedButton(
                     onPressed: () async {
                       if (multiBtnText == "Skip Intro") {
-                        player.seek(Duration(seconds: skipTimes.op.end.round()));
+                        player
+                            .seek(Duration(seconds: skipTimes.op.end.round()));
                         player.play();
                       }
                       if (multiBtnText == "Next Episode") {
+                        userProgress.saveProgress(
+                          animeIds: data[0].ids!,
+                          episodeUrl: oldlink,
+                          episodeNumber: episode,
+                          watched: true,
+                        );
+                        print(" \n \n \n \n \n \n \n \n \n");
+                        print("saving the progress");
+                        print(" \n \n \n \n \n \n \n \n \n");
                         episode++;
                         player.open(Media(link));
                         skipTimes =
-                            (await getSkipTimes(data[0].ids!.malId, data[1]))!;
+                            (await getSkipTimes(data[0].ids!.mal, data[1]))!;
                       }
                     },
                     child: Padding(

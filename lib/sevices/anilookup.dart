@@ -105,7 +105,7 @@ Future<List<AnimeSearchResult>> aniSearch(String query) async {
         allanimeId: allanimeId,
         anilistId: int.parse(aniListId ?? "-1"),
         malId: int.parse(malId ?? "-1"),
-        episode: int.parse(episodes?? "0"),
+        episode: int.parse(episodes ?? "0"),
         banner: banner ?? "",
         cover: cover ?? "",
         name: name ?? "",
@@ -222,7 +222,7 @@ Future<Anime> aniInfo(AnimeSearchResult animeResult) async {
     source: source,
     genres: genres.isEmpty ? genre2 : genres,
     episodeCount: animeResult.episode,
-    description: description == "" ? synopsis : description,
+    description: description ?? synopsis,
     type: type,
     status: status,
     score: score,
@@ -232,4 +232,19 @@ Future<Anime> aniInfo(AnimeSearchResult animeResult) async {
     season: "",
     airing: malResults["airing"],
   );
+}
+
+Future<AnimeReference> aniref(AnimeReference anime) async {
+  final malId = anime.id;
+
+  final malResults = await jikanFetch(malId);
+
+  final coverUrl = malResults["images"]["webp"]["large_image_url"];
+
+  return AnimeReference(
+      id: malId,
+      name: anime.name,
+      type: anime.type,
+      url: anime.url,
+      cover: coverUrl);
 }

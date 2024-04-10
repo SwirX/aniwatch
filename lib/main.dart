@@ -1,12 +1,14 @@
 import 'package:aniwatch/classes/anime.dart';
 import 'package:aniwatch/pages/anime.dart';
 import 'package:aniwatch/routes.dart';
+import 'package:aniwatch/services/check_update.dart';
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized();
+  checkForUpdates();
   runApp(const MyApp());
 }
 

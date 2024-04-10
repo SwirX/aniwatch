@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 // ignore: depend_on_referenced_packages
 import 'package:http/http.dart' as http;
-import 'package:url_launcher/url_launcher_string.dart';
+import 'package:android_package_installer/android_package_installer.dart';
 
 const endpoint = "https://api.github.com/repos/SwirX/aniwatch/releases";
 
@@ -22,7 +22,7 @@ Future<String?> checkForUpdates() async {
   final assets = response["assets"];
   final version = response["tag_name"];
   final currentversion = (await PackageInfo.fromPlatform()).version;
-  if (currentversion == version) {
+  if (currentversion != version) {
     if (kDebugMode) {
       print("no updates available");
     }
@@ -40,7 +40,13 @@ Future<String?> checkForUpdates() async {
     final bytes = res.bodyBytes;
     final file = await File(apkPath).create();
     await file.writeAsBytes(bytes);
-    launchUrlString("file:$apkPath");
+    int? statusCode = await AndroidPackageInstaller.installApk(
+        apkFilePath: apkPath);
+    if (statusCode != null) {
+      PackageInstallerStatus installationStatus =
+          PackageInstallerStatus.byCode(statusCode);
+      print(installationStatus.name);
+    }
     return "Updated successfully";
   }
 }
