@@ -35,7 +35,7 @@ AniWatch is a simple mobile application built with Flutter that allows users to 
 
 ## Alternative: Precompiled Binaries
 
-If you prefer not to compile the source code yourself, precompiled binaries for Android and iOS platforms are available. Simply download the appropriate binary for your device and install it to start using AniWatch immediately.
+If you prefer not to compile the source code yourself, precompiled binaries (currently only android available) are available. Simply download the binary from the [Releases](https://gihub.com/SwirX/aniwatch) and install it to start using AniWatch immediately.
 
 ## CLI Version
 
