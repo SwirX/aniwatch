@@ -35,11 +35,11 @@ AniWatch is a simple mobile application built with Flutter that allows users to 
 
 ## Alternative: Precompiled Binaries
 
-If you prefer not to compile the source code yourself, precompiled binaries (currently only android available) are available. Simply download the binary from the [Releases](https://gihub.com/SwirX/aniwatch) and install it to start using AniWatch immediately.
+If you prefer not to compile the source code yourself, precompiled binaries (currently only android available) are available. Simply download the binary from the [Releases](https://gihub.com/SwirX/aniwatch/Releases) and install it to start using AniWatch immediately.
 
 ## CLI Version
 
-For users who prefer a command-line interface (CLI) experience, an alternative CLI tool named [AniWatch-CLI](https://github.com/SwirX/aniwatch-cli) is available. It provides similar functionality to AniWatch but allows users to watch anime episodes directly from the terminal.
+For users who prefer a command-line interface (CLI) experience, an alternative CLI program [AniWatch-CLI](https://github.com/SwirX/aniwatch-cli) is available. It provides similar functionality to AniWatch but allows users to watch anime episodes directly from the terminal.
 
 ## Contributing
 
