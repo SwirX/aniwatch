@@ -160,7 +160,9 @@ Future<Map<String, dynamic>> jikanFetch(int id) async {
 
   // Check if data is cached
   if (prefs.containsKey(cacheKey)) {
-    print("loading from cache");
+    if (kDebugMode) {
+      print("loading from cache");
+    }
     final String cachedData = prefs.getString(cacheKey)!;
     return jsonDecode(cachedData)["data"];
   }
@@ -246,13 +248,15 @@ Future<Map<String, dynamic>> _fetchData(int id, String type) async {
   throw Exception('Exceeded maximum retries for API request.');
 }
 
-Future<List> jikanAnimeRecomandationFetch(int id) async {
+Future<List> jikanRelatedAnimeRecommendations(int id) async {
   final SharedPreferences prefs = await SharedPreferences.getInstance();
   final String cacheKey = 'jikan_recomndation_$id';
 
   // Check if data is cached
   if (prefs.containsKey(cacheKey)) {
-    print("loading from cache");
+    if (kDebugMode) {
+      print("loading from cache");
+    }
     final String cachedData = prefs.getString(cacheKey)!;
     // print("recommandation: $cachedData");
     return jsonDecode(cachedData)["data"];
@@ -274,6 +278,39 @@ Future<List> jikanAnimeRecomandationFetch(int id) async {
   prefs.setString(cacheKey, jsonEncode(responseData));
 
   return responseData["data"];
+}
+
+Future<List> jikanAnimeEpisodesThumbs(int id) async {
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
+  final String cacheKey = 'jikan_ep_thumb_$id';
+
+  // Check if data is cached
+  if (prefs.containsKey(cacheKey)) {
+    if (kDebugMode) {
+      print("loading from cache");
+    }
+    final String cachedData = prefs.getString(cacheKey)!;
+    // print("recommandation: $cachedData");
+    return jsonDecode(cachedData)["data"];
+  }
+
+  final res = await http.get(
+    Uri.parse("https://api.jikan.moe/v4/anime/$id/videos/episodes"),
+    headers: {"ContentType": "application/json"},
+  );
+
+  final resp = res.body;
+  print("episodes_thumbs: $resp");
+
+  // If not cached, fetch data from API
+  final List responseData = jsonDecode(resp)["data"];
+  responseData.sort((a, b) => a['mal_id'].compareTo(b['mal_id']));
+
+  // Cache the fetched data
+  print("episodes thumbs: ${jsonEncode(responseData)}");
+  prefs.setString(cacheKey, jsonEncode(responseData));
+
+  return responseData;
 }
 
 Future<Map<String, dynamic>> jikanAnimeEpisodeFetch(int id, int ep) async {
@@ -306,7 +343,6 @@ Future<Map<String, dynamic>> jikanAnimeEpisodeFetch(int id, int ep) async {
   throw Exception('Exceeded maximum retries for API request.');
 }
 
-
 Future<List> jikanAnimeEpisodesFetch(int id, int eps) async {
   final SharedPreferences prefs = await SharedPreferences.getInstance();
   final String cacheKey = 'episodesInfo_$id';
@@ -320,7 +356,7 @@ Future<List> jikanAnimeEpisodesFetch(int id, int eps) async {
   List<Map<String, dynamic>> episodesInfo = [];
 
   for (var i = 0; i < eps; i++) {
-    final info = await jikanAnimeEpisodeFetch(id, i+1);
+    final info = await jikanAnimeEpisodeFetch(id, i + 1);
     episodesInfo.add(info);
   }
 
@@ -328,6 +364,38 @@ Future<List> jikanAnimeEpisodesFetch(int id, int eps) async {
   prefs.setString(cacheKey, jsonEncode(episodesInfo));
 
   return episodesInfo;
+}
+
+Future<List> jikanAnimeRecommendations(int id) async {
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
+  final String cacheKey = 'jikan_ep_thumb_$id';
+
+  // Check if data is cached
+  if (prefs.containsKey(cacheKey)) {
+    if (kDebugMode) {
+      print("loading from cache");
+    }
+    final String cachedData = prefs.getString(cacheKey)!;
+    // print("recommandation: $cachedData");
+    return jsonDecode(cachedData)["data"];
+  }
+
+  final res = await http.get(
+    Uri.parse("https://api.jikan.moe/v4/recommendations/anime"),
+    headers: {"ContentType": "application/json"},
+  );
+
+  final resp = res.body;
+  print("anime recommendations: $resp");
+
+  // If not cached, fetch data from API
+  final List responseData = jsonDecode(resp)["data"];
+
+  // Cache the fetched data
+  print("anime recommendations: ${jsonEncode(responseData)}");
+  prefs.setString(cacheKey, jsonEncode(responseData));
+
+  return responseData;
 }
 
 Future<Map> animeSearch(String searchTerm) async {

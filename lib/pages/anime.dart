@@ -1,7 +1,7 @@
 import 'package:aniwatch/classes/anime.dart';
 import 'package:aniwatch/classes/anime_progress.dart';
 import 'package:aniwatch/services/anisearch.dart';
-import 'package:aniwatch/sevices/anilookup.dart';
+import 'package:aniwatch/services/anilookup.dart';
 import 'package:aniwatch/widgets/anime_recomandation.dart';
 import 'package:aniwatch/widgets/anime_reference.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -64,7 +64,293 @@ class _AnimePageState extends State<AnimePage> {
   @override
   Widget build(BuildContext context) {
     if (animeData == null) {
-      return const Center(child: CircularProgressIndicator());
+      return Scaffold(
+        body: Skeletonizer(
+          enabled: animeData == null,
+          child: CustomScrollView(
+            slivers: [
+              SliverAppBar(
+                expandedHeight: 200,
+                pinned: true,
+                surfaceTintColor: ambiantColor,
+                flexibleSpace: FlexibleSpaceBar(
+                  title: Bone.text(
+                    words: 3,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  background: const Bone.button(height: 200, width: 500),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Container(
+                  width: MediaQuery.of(context).size.width,
+                  decoration: BoxDecoration(
+                    boxShadow: [
+                      BoxShadow(
+                        color: ambiantColor ?? const Color(0xffcdcdcd),
+                        spreadRadius: 15,
+                        blurRadius: 500,
+                      ),
+                    ],
+                  ),
+                  child: SizedBox(
+                    width: MediaQuery.of(context).size.width,
+                    height: 10,
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    children: [
+                      Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: AnimatedOpacity(
+                              opacity: coverVisible ? 1.0 : 0.0,
+                              duration: const Duration(milliseconds: 500),
+                              child: Bone.button(
+                                height: 200,
+                                width: 140,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            bottom: 0,
+                            left: 0,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: ambiantColor,
+                                borderRadius: const BorderRadius.only(
+                                    bottomLeft: Radius.circular(12),
+                                    topRight: Radius.circular(12)),
+                              ),
+                              child: const Padding(
+                                padding: EdgeInsets.all(2.0),
+                                child: Row(
+                                  children: [
+                                    Bone.text(
+                                      words: 1,
+                                    ),
+                                    Icon(
+                                      CupertinoIcons.star_fill,
+                                      size: 12,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Expanded(
+                        flex: 3,
+                        child: Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(Icons.tv, size: 18),
+                                  SizedBox(width: 5),
+                                  Bone.text(words: 1),
+                                ],
+                              ),
+                              Bone.text(words: 2),
+                              Bone.text(words: 2),
+                              Bone.text(words: 1),
+                              Bone.text(words: 2),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        flex: 4,
+                        child: Padding(
+                          padding: const EdgeInsets.all(4.0),
+                          child: Bone.button(
+                            words: 3,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                      const Expanded(
+                        flex: 1,
+                        child: Padding(
+                            padding: EdgeInsets.all(4.0),
+                            child: Bone.button(
+                              words: 1,
+                              height: 25,
+                            )),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 500),
+                  child: Visibility(
+                    visible: episodesVisible,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Episodes: ',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Card(
+                            elevation: 5,
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: List.generate(
+                                    animeData?.episodeCount ?? 5,
+                                    (index) => Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: animeData == null
+                                              ? Bone.button(
+                                                  words: 2,
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                )
+                                              : ElevatedButton(
+                                                  style:
+                                                      ElevatedButton.styleFrom(
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                        vertical: 16),
+                                                    foregroundColor:
+                                                        ambiantColor,
+                                                    shape:
+                                                        RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              16),
+                                                    ),
+                                                  ),
+                                                  onPressed: () {
+                                                    Navigator.pushNamed(
+                                                        context, "/watch",
+                                                        arguments: [
+                                                          animeData,
+                                                          index + 1
+                                                        ]);
+                                                  },
+                                                  child: Text(
+                                                      "Episode ${index + 1}")),
+                                        )),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        isDescriptionExpanded = !isDescriptionExpanded;
+                      });
+                    },
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Description:',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        animeData == null
+                            ? const Bone.multiText(
+                                lines: 3,
+                              )
+                            : Text(
+                                (animeData?.description ?? "")
+                                    .replaceAll("<br><br>", "\n"),
+                                style: const TextStyle(fontSize: 16),
+                                maxLines: isDescriptionExpanded ? null : 3,
+                                overflow: isDescriptionExpanded
+                                    ? TextOverflow.visible
+                                    : TextOverflow.ellipsis,
+                              ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Genres:',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: List.generate(
+                            animeData?.genres?.length ?? 5,
+                            (index) => animeData == null
+                                ? Bone.button(
+                                    words: 1,
+                                    borderRadius: BorderRadius.circular(8))
+                                : Padding(
+                                    padding: const EdgeInsets.only(left: 8.0),
+                                    child: Chip(
+                                      label: Text(
+                                          animeData?.genres?[index] == ""
+                                              ? "loading"
+                                              : "${animeData?.genres?[index]}",
+                                          style:
+                                              TextStyle(color: ambiantColor)),
+                                    ),
+                                  ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
     var colorString = animeData!.media!.cover!.color!.substring(1);
@@ -73,6 +359,18 @@ class _AnimePageState extends State<AnimePage> {
     latestProgress =
         userProgress.getLatestEpisodeProgress(animeData!.ids!.allanime);
     setState(() {});
+    if (latestProgress != null) {
+      print('Latest episode progress:');
+      print('Anime ID (AllAnime): ${latestProgress!.animeIds.allanime}');
+      print('Anime ID (AniList): ${latestProgress!.animeIds.anilist}');
+      print('Anime ID (MAL): ${latestProgress!.animeIds.mal}');
+      print('Episode Number: ${latestProgress!.episodeNumber}');
+      print('Episode URL: ${latestProgress!.episodeUrl}');
+      print('Watched: ${latestProgress!.watched}');
+      print('Episode Title: ${latestProgress!.episodeTitle ?? "N/A"}');
+    } else {
+      print('No latest episode progress found.');
+    }
 
     return Scaffold(
       body: CustomScrollView(
@@ -282,9 +580,21 @@ class _AnimePageState extends State<AnimePage> {
                       padding: const EdgeInsets.all(4.0),
                       child: ElevatedButton(
                         onPressed: () {
+                          final lastep = latestProgress?.watched == false
+                              ? latestProgress!.episodeNumber
+                              : latestProgress != null
+                                  ? latestProgress!.episodeNumber + 1
+                                  : 1;
+                          final ts = latestProgress == null
+                              ? Duration.zero
+                              : latestProgress!.progress;
+                          final url = latestProgress == null
+                              ? ""
+                              : latestProgress!.episodeUrl;
                           Navigator.pushNamed(context, "/watch", arguments: [
                             animeData!,
-                            (latestProgress?.episodeNumber ?? 0) + 1,
+                            lastep,
+                            ts,
                           ]);
                         },
                         style: ElevatedButton.styleFrom(
@@ -298,8 +608,11 @@ class _AnimePageState extends State<AnimePage> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        child: Text(
-                            'Play Episode ${(latestProgress?.episodeNumber ?? 0) + 1}'),
+                        child: Text(latestProgress?.watched == false
+                            ? 'Resume Episode ${latestProgress!.episodeNumber}'
+                            : latestProgress != null
+                                ? 'Resume Episode ${latestProgress!.episodeNumber + 1}'
+                                : "Play Episode 1"),
                       ),
                     ),
                   ),
@@ -333,53 +646,56 @@ class _AnimePageState extends State<AnimePage> {
             ),
           ),
           SliverToBoxAdapter(
-            child: Visibility(
-              visible: episodesVisible,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Episodes:',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Card(
-                      elevation: 5,
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: List.generate(
-                              animeData!.episodeCount!,
-                              (index) => Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
-                                          padding: const EdgeInsets.symmetric(
-                                              vertical: 16),
-                                          foregroundColor: ambiantColor!,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(16),
-                                          ),
-                                        ),
-                                        onPressed: () {
-                                          Navigator.pushNamed(context, "/watch",
-                                              arguments: [
-                                                animeData!,
-                                                index + 1
-                                              ]);
-                                        },
-                                        child: Text("Episode ${index + 1}")),
-                                  )),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 500),
+              child: Visibility(
+                visible: episodesVisible,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Episodes: ',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 8),
+                      Card(
+                        elevation: 5,
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: List.generate(
+                                animeData!.episodeCount!,
+                                (index) => Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
+                                            padding: const EdgeInsets.symmetric(
+                                                vertical: 16),
+                                            foregroundColor: ambiantColor!,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                            ),
+                                          ),
+                                          onPressed: () {
+                                            Navigator.pushNamed(
+                                                context, "/watch", arguments: [
+                                              animeData!,
+                                              index + 1
+                                            ]);
+                                          },
+                                          child: Text("Episode ${index + 1}")),
+                                    )),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -580,7 +896,7 @@ class _AnimePageState extends State<AnimePage> {
                                   builder: (context, snapshot) {
                                     if (!snapshot.hasData ||
                                         snapshot.data?["data"] == null) {
-                                      return Skeletonizer(
+                                      return Skeletonizer.zone(
                                         enabled: snapshot.connectionState ==
                                             ConnectionState.waiting,
                                         child: const AnimeReferenceWidget(),
@@ -592,6 +908,7 @@ class _AnimePageState extends State<AnimePage> {
                                         type: animeRef.type,
                                         icon: CupertinoIcons.play_rectangle,
                                         relation: relation.relation,
+                                        id: animeRef.id,
                                       );
                                     }
                                   },
@@ -659,12 +976,12 @@ class _AnimePageState extends State<AnimePage> {
                             .take(initialRecommendationsCount)
                             .map((relation) {
                           return FutureBuilder<List>(
-                            future: jikanAnimeRecomandationFetch(
+                            future: jikanRelatedAnimeRecommendations(
                               animeData!.ids!.mal!,
                             ),
                             builder: (context, snapshot) {
                               if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                                return Skeletonizer(
+                                return Skeletonizer.zone(
                                   enabled: snapshot.connectionState ==
                                       ConnectionState.waiting,
                                   child: const AnimeRecommandationWidget(),

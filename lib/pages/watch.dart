@@ -26,6 +26,7 @@ class _WatchPageState extends State<WatchPage> {
   String multiBtnText = "Skip Intro";
   bool multiBtnVisible = false;
   bool linkfetched = false;
+  bool seeked = false;
   late SkipTimes skipTimes;
   String link = "";
   String oldlink = "";
@@ -39,6 +40,7 @@ class _WatchPageState extends State<WatchPage> {
     player = Player();
     controller = VideoController(player);
     player.pause();
+
     player.stream.position.listen((position) async {
       var opstart = skipTimes.op.start;
       var opend = skipTimes.op.end;
@@ -82,6 +84,12 @@ class _WatchPageState extends State<WatchPage> {
     super.dispose();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    initialize();
+  }
+
   void initialize() async {
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeLeft,
@@ -90,20 +98,27 @@ class _WatchPageState extends State<WatchPage> {
     if (link.isEmpty) {
       data = ModalRoute.of(context)!.settings.arguments as List;
       episode = data[1];
-      if (link.isEmpty) {
-        link = await play(data[0].ids!.allanime!, data[1], "sub");
-        if (kDebugMode) {
-          print("link loaded");
-        }
-        skipTimes = (await getSkipTimes(data[0].ids!.mal!, data[1]))!;
-        player.open(Media(link));
+      link = data[3] ?? await play(data[0].ids!.allanime!, data[1], "sub");
+      oldlink = link;
+      if (kDebugMode) {
+        print("link loaded");
       }
+      skipTimes = (await getSkipTimes(data[0].ids!.mal!, data[1]))!;
+      player.open(Media(link));
     }
+    // player.stream.buffering.listen((event) {
+    //   if (!event && !seeked) {
+    //     player.seek(data[2]);
+    //     setState(() {
+    //       seeked = true;
+    //     });
+    //     print("seeked");
+    //   }
+    // });
   }
 
   @override
   Widget build(BuildContext context) {
-    initialize();
     final videoTheme = MaterialVideoControlsThemeData(
       volumeGesture: true,
       brightnessGesture: true,
@@ -118,67 +133,83 @@ class _WatchPageState extends State<WatchPage> {
       ],
       bottomButtonBar: [],
       topButtonBar: [
-        IconButton(
-            onPressed: () => Navigator.popAndPushNamed(context, "/anime",
-                arguments: data[0]),
+        MaterialDesktopCustomButton(
+            onPressed: () => Navigator.pop(context),
             icon: const Icon(CupertinoIcons.chevron_back)),
         const Spacer(),
       ],
     );
-    return MaterialVideoControlsTheme(
-      normal: videoTheme,
-      fullscreen: videoTheme,
-      child: Scaffold(
-        body: Stack(
-          children: [
-            Center(
-              child: SizedBox(
-                width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.width * 9.0 / 16.0,
-                child: Video(
-                  controller: controller,
+    return PopScope(
+      onPopInvoked: (didPop) {
+        userProgress.saveProgress(
+          animeIds: data[0].ids!,
+          animeName: data[0].title!.english,
+          episodeUrl: oldlink,
+          progress: player.state.position,
+          episodeNumber: episode,
+          watched: false,
+        );
+        return;
+      },
+      child: MaterialVideoControlsTheme(
+        normal: videoTheme,
+        fullscreen: videoTheme,
+        child: Scaffold(
+          body: Stack(
+            children: [
+              Center(
+                child: SizedBox(
+                  width: MediaQuery.of(context).size.width,
+                  height: MediaQuery.of(context).size.width * 9.0 / 16.0,
+                  child: Video(
+                    controller: controller,
+                  ),
                 ),
               ),
-            ),
-            if (multiBtnVisible)
-              Positioned(
-                right: 0,
-                bottom: 0,
-                child: Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 64, 32),
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      if (multiBtnText == "Skip Intro") {
-                        player
-                            .seek(Duration(seconds: skipTimes.op.end.round()));
-                        player.play();
-                      }
-                      if (multiBtnText == "Next Episode") {
-                        userProgress.saveProgress(
-                          animeIds: data[0].ids!,
-                          episodeUrl: oldlink,
-                          episodeNumber: episode,
-                          watched: true,
-                        );
-                        print(" \n \n \n \n \n \n \n \n \n");
-                        print("saving the progress");
-                        print(" \n \n \n \n \n \n \n \n \n");
-                        episode++;
-                        player.open(Media(link));
-                        skipTimes =
-                            (await getSkipTimes(data[0].ids!.mal, data[1]))!;
-                      }
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        multiBtnText,
+              if (multiBtnVisible)
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 64, 32),
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        if (multiBtnText == "Skip Intro") {
+                          player.seek(
+                              Duration(seconds: skipTimes.op.end.round()));
+                          player.play();
+                        }
+                        if (multiBtnText == "Next Episode") {
+                          userProgress.saveProgress(
+                            animeIds: data[0].ids!,
+                            animeName: data[0].title!.english,
+                            episodeUrl: oldlink,
+                            progress: player.state.position,
+                            episodeNumber: episode,
+                            watched: true,
+                          );
+                          if (kDebugMode) {
+                            print(" \n \n \n \n \n \n \n \n \n");
+                            print("saving the progress");
+                            print(" \n \n \n \n \n \n \n \n \n");
+                          }
+                          episode++;
+                          player.open(Media(link));
+                          skipTimes =
+                              (await getSkipTimes(data[0].ids!.mal, data[1]))!;
+                        }
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          multiBtnText,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );

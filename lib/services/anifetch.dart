@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:aniwatch/classes/anime.dart';
 import 'package:aniwatch/services/anisearch.dart';
-import 'package:aniwatch/sevices/anilookup.dart';
+import 'package:aniwatch/services/anilookup.dart';
 import 'package:flutter/foundation.dart';
 // ignore: depend_on_referenced_packages
 import 'package:http/http.dart' as http;
