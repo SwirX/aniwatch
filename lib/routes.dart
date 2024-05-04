@@ -1,7 +1,9 @@
+import 'package:aniwatch/services/local_server.dart';
 import 'package:aniwatch/pages/home.dart';
-import 'package:aniwatch/pages/watch.dart';
+import 'package:aniwatch/pages/search.dart';
 
-var appRoutes =  {
+var appRoutes = {
   "/": (context) => const Homepage(),
-  "/watch": (content) => const WatchPage(),
+  "/search": (context) => const Searchpage(),
+  "/anilist": (context) => AniListAuthScreen(),
 };

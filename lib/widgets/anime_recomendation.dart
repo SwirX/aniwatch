@@ -4,28 +4,18 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
-class AnimeReferenceWidget extends StatefulWidget {
-  const AnimeReferenceWidget(
-      {super.key,
-      this.data,
-      this.relation,
-      this.icon,
-      this.name,
-      this.type,
-      this.id});
+class AnimeRecommandationWidget extends StatefulWidget {
+  const AnimeRecommandationWidget({super.key, this.data, this.name});
 
   final Map? data;
-  final String? relation;
-  final IconData? icon;
-  final String? type;
   final String? name;
-  final int? id;
 
   @override
-  State<AnimeReferenceWidget> createState() => _AnimeReferenceWidgetState();
+  State<AnimeRecommandationWidget> createState() =>
+      _AnimeRecommandationWidgetState();
 }
 
-class _AnimeReferenceWidgetState extends State<AnimeReferenceWidget> {
+class _AnimeRecommandationWidgetState extends State<AnimeRecommandationWidget> {
   late AnimeSearchResult animeRes;
 
   _fetchRes(String name, String id, bool mal) async {
@@ -48,7 +38,6 @@ class _AnimeReferenceWidgetState extends State<AnimeReferenceWidget> {
 
   @override
   Widget build(BuildContext context) {
-    _fetchRes(widget.name ?? "", "${widget.id!}", true);
     return Skeletonizer(
       enabled: widget.data == null,
       child: Card(
@@ -56,8 +45,14 @@ class _AnimeReferenceWidgetState extends State<AnimeReferenceWidget> {
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: GestureDetector(
-            onTap: () {
-              Navigator.popAndPushNamed(context, "/anime", arguments: animeRes);
+            onTap: () async {
+              final resp = await aniSearch(widget.name!);
+              for (var animeres in resp) {
+                if (animeres.malId == widget.data!["mal_id"]) {
+                  Navigator.pushNamed(context, "/anime",
+                      arguments: animeres);
+                }
+              }
             },
             child: Padding(
               padding: const EdgeInsets.only(bottom: 8.0),
@@ -73,15 +68,9 @@ class _AnimeReferenceWidgetState extends State<AnimeReferenceWidget> {
                       child: CachedNetworkImage(
                         width: 105,
                         height: 150,
-                        imageUrl: widget.type == "manga"
-                            ? "${widget.data?["data"][1]["jpg"]["large_image_url"] ?? widget.data?["data"].last["jpg"]["large_image_url"]}"
-                            : "${widget.data?["data"].last["jpg"]["large_image_url"] ?? ""}",
-                        // placeholder: (context, url) => Container(
-                        //   height: 150,
-                        //   width: 105,
-                        // ),
-                        progressIndicatorBuilder: (context, url, progress) =>
-                            Bone.button(
+                        imageUrl:
+                            "${widget.data?["images"]?["jpg"]["large_image_url"] ?? widget.data?["images"]["webp"]["large_image_url"]}",
+                        placeholder: (context, url) => Bone.button(
                           height: 150,
                           width: 105,
                           borderRadius: BorderRadius.circular(8),
@@ -94,28 +83,8 @@ class _AnimeReferenceWidgetState extends State<AnimeReferenceWidget> {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          Icon(
-                            widget.icon,
-                            size: 16,
-                            color: const Color(0xff555577),
-                          ),
-                          const SizedBox(width: 5),
-                          Text(
-                            widget.relation ?? "",
-                            style: const TextStyle(
-                              color: Color(0xff555577),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsetsDirectional.fromSTEB(8, 0, 8, 16),
+                      padding:
+                          const EdgeInsetsDirectional.fromSTEB(8, 0, 8, 16),
                       child: Skeleton.shade(
                         child: Text(
                           widget.name ?? "",

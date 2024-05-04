@@ -1,4 +1,4 @@
-package com.example.aniwatch
+package com.aniwatch
 
 import io.flutter.embedding.android.FlutterActivity
 

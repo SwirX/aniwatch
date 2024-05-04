@@ -110,7 +110,7 @@ Future<List<AnimeSearchResult>> aniSearch(String query) async {
         cover: cover ?? "",
         name: name ?? "",
         genre: primaryGenre ?? "",
-        score: score ?? 0.0,
+        score: double.parse("${score ?? "0"}"),
       );
 
       animeResults.add(resultObject);
@@ -119,6 +119,8 @@ Future<List<AnimeSearchResult>> aniSearch(String query) async {
 
   return animeResults;
 }
+
+
 
 Future<Anime> aniInfo(AnimeSearchResult animeResult) async {
   final malId = animeResult.malId;

@@ -1,5 +1,7 @@
+import 'package:aniwatch/classes/anime.dart';
 import 'package:aniwatch/classes/anime_progress.dart';
 import 'package:aniwatch/classes/skiptimes.dart';
+import 'package:aniwatch/providers/allanime.dart';
 import 'package:aniwatch/services/anifetch.dart';
 import 'package:aniwatch/services/aniskip.dart';
 import 'package:flutter/cupertino.dart';
@@ -10,7 +12,17 @@ import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
 class WatchPage extends StatefulWidget {
-  const WatchPage({super.key});
+  const WatchPage(
+      {super.key,
+      required this.anime,
+      required this.animeLink,
+      required this.timestamp,
+      required this.lastEp});
+
+  final Anime anime;
+  final String animeLink;
+  final Duration timestamp;
+  final int lastEp;
 
   @override
   // ignore: library_private_types_in_public_api
@@ -26,11 +38,10 @@ class _WatchPageState extends State<WatchPage> {
   String multiBtnText = "Skip Intro";
   bool multiBtnVisible = false;
   bool linkfetched = false;
+  bool seeked = false;
   late SkipTimes skipTimes;
   String link = "";
   String oldlink = "";
-  // ignore: prefer_typing_uninitialized_variables
-  late final data;
   late int episode;
 
   @override
@@ -39,6 +50,7 @@ class _WatchPageState extends State<WatchPage> {
     player = Player();
     controller = VideoController(player);
     player.pause();
+
     player.stream.position.listen((position) async {
       var opstart = skipTimes.op.start;
       var opend = skipTimes.op.end;
@@ -62,7 +74,7 @@ class _WatchPageState extends State<WatchPage> {
         });
       } else if (position.inSeconds >= edstart - 30 && !linkfetched) {
         oldlink = link;
-        link = await play(data[0].ids!.allanime, data[1] + 1, data[2]!);
+        link = await play(widget.anime.ids!.allanime, widget.lastEp + 1, "sub");
       } else {
         setState(() {
           multiBtnText = "";
@@ -82,28 +94,45 @@ class _WatchPageState extends State<WatchPage> {
     super.dispose();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    initialize();
+  }
+
   void initialize() async {
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
     ]);
     if (link.isEmpty) {
-      data = ModalRoute.of(context)!.settings.arguments as List;
-      episode = data[1];
-      if (link.isEmpty) {
-        link = await play(data[0].ids!.allanime!, data[1], "sub");
-        if (kDebugMode) {
-          print("link loaded");
-        }
-        skipTimes = (await getSkipTimes(data[0].ids!.mal!, data[1]))!;
-        player.open(Media(link));
+      episode = widget.lastEp;
+      link = widget.animeLink == ""
+          ? (await AllAnime()
+                  .getVideoList(widget.anime.ids!.allanime, widget.lastEp))
+              .first
+              .link
+          : widget.animeLink;
+      oldlink = link;
+      if (kDebugMode) {
+        print("link loaded");
       }
+      skipTimes = (await getSkipTimes(widget.anime.ids!.mal!, widget.lastEp))!;
+      player.open(Media(link));
     }
+    player.stream.buffering.listen((event) {
+      if (!event && !seeked) {
+        player.seek(widget.timestamp);
+        setState(() {
+          seeked = true;
+        });
+        print("seeked");
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    initialize();
     final videoTheme = MaterialVideoControlsThemeData(
       volumeGesture: true,
       brightnessGesture: true,
@@ -118,25 +147,39 @@ class _WatchPageState extends State<WatchPage> {
       ],
       bottomButtonBar: [],
       topButtonBar: [
-        IconButton(
-            onPressed: () => Navigator.popAndPushNamed(context, "/anime",
-                arguments: data[0]),
+        MaterialDesktopCustomButton(
+            onPressed: () => Navigator.maybePop(context),
             icon: const Icon(CupertinoIcons.chevron_back)),
         const Spacer(),
       ],
     );
-    return MaterialVideoControlsTheme(
-      normal: videoTheme,
-      fullscreen: videoTheme,
+    return PopScope(
+      canPop: true,
+      onPopInvoked: (didPop) {
+        if (didPop) {
+          userProgress.saveProgress(
+            animeIds: widget.anime.ids!,
+            animeName: widget.anime.title!.english!,
+            episodeUrl: oldlink,
+            progress: player.state.position,
+            episodeNumber: episode,
+            watched: false,
+          );
+        }
+      },
       child: Scaffold(
         body: Stack(
           children: [
             Center(
-              child: SizedBox(
-                width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.width * 9.0 / 16.0,
-                child: Video(
-                  controller: controller,
+              child: MaterialVideoControlsTheme(
+                normal: videoTheme,
+                fullscreen: videoTheme,
+                child: SizedBox(
+                  width: MediaQuery.of(context).size.width,
+                  height: MediaQuery.of(context).size.width * 9.0 / 16.0,
+                  child: Video(
+                    controller: controller,
+                  ),
                 ),
               ),
             ),
@@ -155,18 +198,22 @@ class _WatchPageState extends State<WatchPage> {
                       }
                       if (multiBtnText == "Next Episode") {
                         userProgress.saveProgress(
-                          animeIds: data[0].ids!,
+                          animeIds: widget.anime.ids!,
+                          animeName: widget.anime.title!.english!,
                           episodeUrl: oldlink,
+                          progress: player.state.position,
                           episodeNumber: episode,
                           watched: true,
                         );
-                        print(" \n \n \n \n \n \n \n \n \n");
-                        print("saving the progress");
-                        print(" \n \n \n \n \n \n \n \n \n");
+                        if (kDebugMode) {
+                          print(" \n \n \n \n \n \n \n \n \n");
+                          print("saving the progress");
+                          print(" \n \n \n \n \n \n \n \n \n");
+                        }
                         episode++;
                         player.open(Media(link));
-                        skipTimes =
-                            (await getSkipTimes(data[0].ids!.mal, data[1]))!;
+                        skipTimes = (await getSkipTimes(
+                            widget.anime.ids!.mal!, widget.lastEp))!;
                       }
                     },
                     child: Padding(
@@ -178,6 +225,12 @@ class _WatchPageState extends State<WatchPage> {
                   ),
                 ),
               ),
+            IconButton(
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(
+                CupertinoIcons.chevron_back,
+              ),
+            ),
           ],
         ),
       ),

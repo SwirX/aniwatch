@@ -1,7 +1,105 @@
 import 'dart:convert';
 import 'package:aniwatch/services/anifetch.dart';
+import 'package:aniwatch/services/anilookup.dart';
+import 'package:flutter/foundation.dart';
 // ignore: depend_on_referenced_packages
 import 'package:http/http.dart' as http;
+
+class AnimeLatestUpdateResult {
+  String allanimeId;
+  String name;
+  String thumbnail;
+  String englishName;
+
+  AnimeLatestUpdateResult({
+    required this.allanimeId,
+    required this.name,
+    required this.thumbnail,
+    required this.englishName,
+  });
+
+  factory AnimeLatestUpdateResult.fromResult(Map<String, dynamic> json) {
+    print("id: ${json['_id']}");
+    print("name: ${json['name']}");
+    print("thumbnail: ${json['thumbnail']}");
+    print("english name: ${json["englishName"]}");
+    return AnimeLatestUpdateResult(
+      allanimeId: json['_id'],
+      name: json['name'],
+      thumbnail: json['thumbnail'],
+      englishName: json["englishName"] ?? "",
+    );
+  }
+
+  Future<AnimeSearchResult?> convertToAnimeSearchResult() async {
+    final searchResults = await aniSearch(name);
+    for (final result in searchResults) {
+      if (result.allanimeId == allanimeId) {
+        return result;
+      }
+    }
+    if (englishName != "") {
+      final secondResults = await aniSearch(englishName);
+      for (final result in secondResults) {
+        if (result.allanimeId == allanimeId) {
+          return result;
+        }
+      }
+    }
+    if (kDebugMode) {
+      print("couldn't convert to a searchResult");
+    }
+    return null;
+  }
+}
+
+class AnimePopularResult {
+  String allanimeId;
+  String name;
+  String thumbnail;
+  String englishName;
+
+  AnimePopularResult({
+    required this.allanimeId,
+    required this.name,
+    required this.thumbnail,
+    required this.englishName,
+  });
+
+  factory AnimePopularResult.fromResultCard(Map<String, dynamic> card) {
+    print("id: ${card['_id']}");
+    print("name: ${card['name']}");
+    print("thumbnail: ${card['thumbnail']}");
+    print("english name: ${card["englishName"]}");
+    return AnimePopularResult(
+      allanimeId: card['_id'],
+      name: card['name'],
+      thumbnail: card['thumbnail'],
+      englishName: card["englishName"] ?? "",
+    );
+  }
+
+  Future<AnimeSearchResult?> convertToSearchResult() async {
+    final searchResults = await aniSearch(name);
+    for (final result in searchResults) {
+      if (result.allanimeId == allanimeId) {
+        return result;
+      }
+    }
+    if (englishName != "") {
+      final secondSearch = await aniSearch(englishName);
+      for (final result in secondSearch) {
+        if (result.allanimeId == allanimeId) {
+          return result;
+        }
+      }
+    }
+    if (kDebugMode) {
+      print("couldn't convert to a searchResult");
+    }
+    return null;
+  }
+}
 
 class AnimeSearchResult {
   String allanimeId;
@@ -118,7 +216,12 @@ class AnimeReference {
   String url;
   String? cover;
 
-  AnimeReference({required this.id, required this.name, required this.type, required this.url, this.cover});
+  AnimeReference(
+      {required this.id,
+      required this.name,
+      required this.type,
+      required this.url,
+      this.cover});
 }
 
 class AnimeRelation {
@@ -131,7 +234,10 @@ class AnimeRelation {
     List<AnimeReference> refs = [];
     for (var entry in json["entry"]) {
       final ref = AnimeReference(
-          id: entry["mal_id"], name: entry["name"], type: entry["type"], url: entry["url"]);
+          id: entry["mal_id"],
+          name: entry["name"],
+          type: entry["type"],
+          url: entry["url"]);
       refs.add(ref);
     }
     return AnimeRelation(relation: json['relation'], anime: refs);
@@ -200,6 +306,9 @@ class Anime {
   String? mode;
   int? lastWatched = 1;
   int? lastTimestamp = 0;
+
+  String agent =
+      "Mozilla/5.0 (Windows NT 6.1; Win64; rv:109.0) Gecko/20100101 Firefox/109.0";
 
   Anime({
     // ignore: non_constant_identifier_names
