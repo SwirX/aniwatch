@@ -720,14 +720,20 @@ class _AnimePageState extends State<AnimePage> {
                                                 ),
                                               ),
                                               onPressed: () {
-                                                Navigator.pushNamed(
-                                                    context, "/watch",
-                                                    arguments: [
-                                                      animeData!,
-                                                      index + 1,
-                                                      0,
-                                                      "",
-                                                    ]);
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) {
+                                                      return WatchPage(
+                                                        anime: animeData!,
+                                                        animeLink: "",
+                                                        lastEp: index + 1,
+                                                        timestamp:
+                                                            Duration.zero,
+                                                      );
+                                                    },
+                                                  ),
+                                                );
                                               },
                                               child:
                                                   Text("Episode ${index + 1}")),

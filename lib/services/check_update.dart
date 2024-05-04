@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 // ignore: depend_on_referenced_packages
@@ -8,6 +9,9 @@ import 'package:url_launcher/url_launcher_string.dart';
 const endpoint = "https://api.github.com/repos/SwirX/aniwatch/releases";
 
 Future<String?> checkForUpdates() async {
+  if (Platform.isWindows) {
+    return "";
+  }
   var res = await http.get(Uri.parse(endpoint));
   if (res.statusCode != 200) {
     return "Couldn't update";

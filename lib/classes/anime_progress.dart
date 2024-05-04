@@ -216,8 +216,12 @@ class UserAnimeProgress {
     } else {
       // Otherwise, filter the data based on the animeId
       tmpProgressData = _progressData
-          .where((entry) => entry['animeIds']['allanime'] == allanimeId)
-          .last;
+              .where((entry) => entry['animeIds']['allanime'] == allanimeId)
+              .lastOrNull ??
+          {};
+      if (tmpProgressData.isEmpty) {
+        return null;
+      }
       if (kDebugMode) {
         print("progress data: $tmpProgressData");
       }

@@ -3,16 +3,16 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
-class HomeLastUpdated extends StatefulWidget {
-  const HomeLastUpdated({super.key, required this.result});
+class HomePopular extends StatefulWidget {
+  const HomePopular({super.key, required this.result});
 
-  final AnimeLatestUpdateResult? result;
+  final AnimePopularResult? result;
 
   @override
-  State<HomeLastUpdated> createState() => _HomeLastUpdatedState();
+  State<HomePopular> createState() => _HomePopularState();
 }
 
-class _HomeLastUpdatedState extends State<HomeLastUpdated> {
+class _HomePopularState extends State<HomePopular> {
   @override
   Widget build(BuildContext context) {
     return Skeletonizer(
@@ -23,8 +23,7 @@ class _HomeLastUpdatedState extends State<HomeLastUpdated> {
           padding: const EdgeInsets.all(8.0),
           child: GestureDetector(
             onTap: () async {
-              final animeResult =
-                  await widget.result!.convertToAnimeSearchResult();
+              final animeResult = await widget.result!.convertToSearchResult();
               // ignore: use_build_context_synchronously
               Navigator.pushNamed(context, "/anime", arguments: animeResult);
             },

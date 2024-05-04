@@ -148,7 +148,7 @@ class _WatchPageState extends State<WatchPage> {
       bottomButtonBar: [],
       topButtonBar: [
         MaterialDesktopCustomButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.maybePop(context),
             icon: const Icon(CupertinoIcons.chevron_back)),
         const Spacer(),
       ],
@@ -225,6 +225,12 @@ class _WatchPageState extends State<WatchPage> {
                   ),
                 ),
               ),
+            IconButton(
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(
+                CupertinoIcons.chevron_back,
+              ),
+            ),
           ],
         ),
       ),

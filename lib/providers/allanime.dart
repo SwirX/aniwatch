@@ -1,8 +1,9 @@
 import "dart:convert";
-// import "package:flutter/foundation.dart";
+import "package:flutter/foundation.dart";
 // ignore: depend_on_referenced_packages
+import "package:aniwatch/classes/anime.dart";
 import "package:http/http.dart" as http;
-// import "package:shared_preferences/shared_preferences.dart";
+import "package:shared_preferences/shared_preferences.dart";
 
 class AllAnime {
   String agent =
@@ -143,18 +144,22 @@ class AllAnime {
     return internalLinks.contains(link);
   }
 
-  Future<Map<String, dynamic>> getPopular({int page = 1}) async {
-    // final sp = await SharedPreferences.getInstance();
-    // final cacheKey = "popular_$page";
-    // final cachedDataString = sp.getString(cacheKey);
-    // final cachedData = jsonDecode(cachedDataString!);
+  Future<List<AnimePopularResult>> getPopular({int page = 1}) async {
+    final sp = await SharedPreferences.getInstance();
+    final cacheKey = "popular_$page";
+    final cachedDataString = sp.getString(cacheKey);
+    final cachedData = jsonDecode(cachedDataString ?? "[]") as Map;
 
-    // if (cachedData != null) {
-    //   if (DateTime.now().millisecondsSinceEpoch - cachedData["timestamp"] <=
-    //       60 * 60 * 24) {
-    //     return cachedData;
-    //   }
-    // }
+    if (cachedDataString != null) {
+      if (DateTime.now().millisecondsSinceEpoch - cachedData["timestamp"] <=
+          60 * 60 * 24) {
+        List res = cachedData["results"];
+        return res.map((e) {
+          print(e["anyCard"]);
+          return AnimePopularResult.fromResultCard(e["anyCard"]);
+        }).toList();
+      }
+    }
 
     final params = {
       "variables": jsonEncode({
@@ -175,28 +180,38 @@ class AllAnime {
       },
     );
 
-    // if (kDebugMode) {
-    print(response.body);
-    // }
-    final data =
+    if (kDebugMode) {
+      print(response.body);
+    }
+    List results =
         jsonDecode(response.body)["data"]["queryPopular"]["recommendations"];
-    data["timestamp"] = DateTime.now().millisecondsSinceEpoch;
-    // sp.setString(cacheKey, jsonEncode(data));
-    return data;
+
+    final data = {
+      "timestamp": DateTime.now().millisecondsSinceEpoch,
+      "results": results,
+    };
+
+    //cache result
+    sp.setString(cacheKey, jsonEncode(data));
+
+    return results.map((e) {
+      print(e["anyCard"]);
+      return AnimePopularResult.fromResultCard(e["anyCard"]);
+    }).toList();
   }
 
-  Future<Map<String, dynamic>> getLatestUpdate({int page = 1}) async {
-    // final sp = await SharedPreferences.getInstance();
-    // final cacheKey = "latestUpdate_$page";
-    // final cacheDataString = sp.getString(cacheKey);
-    // final cacheData = jsonDecode(cacheDataString ?? "{}");
+  Future<List<AnimeLatestUpdateResult>> getLatestUpdate({int page = 1}) async {
+    final sp = await SharedPreferences.getInstance();
+    final cacheKey = "latestUpdate_$page";
+    final cacheDataString = sp.getString(cacheKey);
+    final cacheData = jsonDecode(cacheDataString ?? "{}");
 
-    // if (cacheDataString != null) {
-    //   if (DateTime.now().millisecondsSinceEpoch - cacheData["timestamp"] <=
-    //       60 * 60 * 24) {
-    //     return cacheData;
-    //   }
-    // }
+    if (cacheDataString != null) {
+      if (DateTime.now().millisecondsSinceEpoch - cacheData["timestamp"] <=
+          60 * 60 * 24) {
+        return cacheData["results"];
+      }
+    }
 
     final params = {
       "variables": jsonEncode({
@@ -220,30 +235,37 @@ class AllAnime {
     final uri = Uri.parse("$allanimeApi/api").replace(queryParameters: params);
 
     final response = await http.get(uri, headers: headers);
-    // if (kDebugMode) {
-    print(response.body);
-    // }
+    if (kDebugMode) {
+      print(response.body);
+    }
 
-    final data = jsonDecode(response.body)["data"]["shows"]["edges"];
-    data["timestamp"] = DateTime.now().millisecondsSinceEpoch;
-    // sp.setString(cacheKey, jsonEncode(data));
-    return data;
+    List result = jsonDecode(response.body)["data"]["shows"]["edges"];
+
+    final data = {
+      "timestamp": DateTime.now().millisecondsSinceEpoch,
+      "results": result,
+    };
+
+    // cache data
+    sp.setString(cacheKey, jsonEncode(data));
+
+    return result.map((e) => AnimeLatestUpdateResult.fromResult(e)).toList();
   }
 
   Future<List<AnimeV2>> search(String query, {int page = 1}) async {
-    // final sp = await SharedPreferences.getInstance();
-    // final cacheKey = "search_$query";
-    // final cacheDataString = sp.getString(cacheKey);
-    // final cacheData = jsonDecode(cacheDataString ?? "{}");
+    final sp = await SharedPreferences.getInstance();
+    final cacheKey = "search_$query";
+    final cacheDataString = sp.getString(cacheKey);
+    final cacheData = jsonDecode(cacheDataString ?? "{}");
 
-    // if (cacheDataString != null) {
-    //   final List<AnimeV2> animeList = [];
-    //   for (var edge in cacheData) {
-    //     animeList.add(AnimeV2(
-    //         edge["_id"], edge["name"], int.parse(edge["episodeCount"]), []));
-    //   }
-    //   return animeList;
-    // }
+    if (cacheDataString != null) {
+      final List<AnimeV2> animeList = [];
+      for (var edge in cacheData) {
+        animeList.add(AnimeV2(
+            edge["_id"], edge["name"], int.parse(edge["episodeCount"]), []));
+      }
+      return animeList;
+    }
 
     final params = {
       "variables": jsonEncode({
@@ -269,12 +291,15 @@ class AllAnime {
 
     final response = await http.get(uri, headers: headers);
 
-    // if (kDebugMode) {
-    print(response.body);
-    // }
+    if (kDebugMode) {
+      print(response.body);
+    }
 
     final data = jsonDecode(response.body)["data"]["shows"]["edges"];
-    // sp.setString(cacheKey, jsonEncode(data));
+
+    // cache data
+    sp.setString(cacheKey, jsonEncode(data));
+
     final List<AnimeV2> animeList = [];
     for (var edge in data) {
       animeList.add(AnimeV2(
@@ -284,6 +309,14 @@ class AllAnime {
   }
 
   Future<Map<String, dynamic>> getAnimeDetails(String animeId) async {
+    final sp = await SharedPreferences.getInstance();
+    final cacheKey = "animeDetails_$animeId";
+    final cacheDataString = sp.getString(cacheKey);
+    final cacheData = jsonDecode(cacheDataString ?? "{}");
+
+    if (cacheDataString != null) {
+      return cacheData;
+    }
     final params = {
       "variables": jsonEncode({
         "_id": animeId,
@@ -300,16 +333,27 @@ class AllAnime {
 
     final response = await http.get(uri, headers: headers);
 
-    // if (kDebugMode) {
-    print(response.body);
-    // }
+    if (kDebugMode) {
+      print(response.body);
+    }
 
     final data = jsonDecode(response.body)["data"]["show"];
-    //sp.setString(cacheKey, jsonEncode(data));
+    // cache data
+    sp.setString(cacheKey, jsonEncode(data));
+
     return data;
   }
 
   Future<List> getEpisodesStreams(String animeId, int episodeNumber) async {
+    final sp = await SharedPreferences.getInstance();
+    final cacheKey = "stream_${animeId}_episode_$episodeNumber";
+    final cacheDataString = sp.getString(cacheKey);
+    final cacheData = jsonDecode(cacheDataString ?? "{}");
+
+    if (cacheDataString != null) {
+      return cacheData;
+    }
+
     final params = {
       "variables": jsonEncode({
         "showId": animeId,
@@ -328,12 +372,12 @@ class AllAnime {
 
     final response = await http.get(uri, headers: headers);
 
-    // if (kDebugMode) {
-    print(response.body);
-    // }
+    if (kDebugMode) {
+      print(response.body);
+    }
 
     final data = jsonDecode(response.body)["data"]["episode"]["sourceUrls"];
-    // sp.setString(cacheKey, jsonEncode(data));
+    sp.setString(cacheKey, jsonEncode(data));
     return data;
   }
 
@@ -353,8 +397,46 @@ class AllAnime {
   }
 
   Future<List<VideoLink>> getVideoList(String animeId, int episodeNum) async {
+    final sp = await SharedPreferences.getInstance();
+    final cacheKey = "videoList_${animeId}_episode_$episodeNum";
+    final cacheDataString = sp.getString(cacheKey);
+    final cacheData = jsonDecode(cacheDataString ?? "[]") as List;
+
+    if (cacheDataString != "") {
+      print("cache data: $cacheData");
+
+      final results = [];
+      for (var video in cacheData) {
+        print(
+            "the video in the videoList When fetching the videoList is $video");
+        video = video.first;
+        if (video == []) {
+          continue;
+        }
+        if (kDebugMode) {
+          print(video);
+        }
+        final link = video["link"];
+        final hls =
+            video["hls"] ?? (video["mp4"] != null ? !video["mp4"] : false);
+        final mp4 =
+            video["mp4"] ?? (video["hls"] != null ? !video["hls"] : false);
+        final resolution = video["resolutionStr"];
+        final src = video["rawUrls"] ?? "";
+        final rawUrls = video["rawUrls"] ?? {};
+        results.add(VideoLink(
+          link: link,
+          hls: hls,
+          mp4: mp4,
+          resolution: resolution,
+          src: src,
+          rawUrls: rawUrls,
+        ));
+      }
+    }
+
     final episodesStreams = await getEpisodesStreams(animeId, episodeNum);
-    final videoList = [];
+    var videoList = [];
     for (var stream in episodesStreams) {
       if (isInternal(stream["sourceName"])) {
         final links =
@@ -362,18 +444,17 @@ class AllAnime {
         videoList.add(links);
       }
     }
-    final List<VideoLink> videoLinks = [];
-    for (var video in videoList) {
-      if (video == {}) {
-        // if (kDebugMode) {
-        print("skipping");
-        // }
-        continue;
-      }
+    videoList = videoList.where((list) => list.isNotEmpty).toList();
+
+    // cache videoList
+    sp.setString(cacheKey, jsonEncode(videoList));
+
+    final List<VideoLink> videoLinks = videoList.map((video) {
+      print("the video in the videoList When fetching the videoList is $video");
       video = video.first;
-      // if (kDebugMode) {
-      print(video);
-      // }
+      if (kDebugMode) {
+        print(video);
+      }
       final link = video["link"];
       final hls =
           video["hls"] ?? (video["mp4"] != null ? !video["mp4"] : false);
@@ -382,15 +463,15 @@ class AllAnime {
       final resolution = video["resolutionStr"];
       final src = video["rawUrls"] ?? "";
       final rawUrls = video["rawUrls"] ?? {};
-      videoLinks.add(VideoLink(
+      return VideoLink(
         link: link,
         hls: hls,
         mp4: mp4,
         resolution: resolution,
         src: src,
         rawUrls: rawUrls,
-      ));
-    }
+      );
+    }).toList();
 
     return videoLinks;
   }
