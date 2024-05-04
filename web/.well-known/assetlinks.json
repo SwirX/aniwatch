@@ -1,0 +1,14 @@
+[
+    {
+        "relations": [
+            "delegate_permission/common.handle_all_urls"
+        ],
+        "target": {
+            "namespace": "android_app",
+            "package_name": "com.aniwatch",
+            "sha256_cert_fingerprints": [
+                "AA:F2:41:4C:DA:74:E2:01:B1:F3:38:FE:1A:1D:F4:C8:18:22:A2:FD:3F:49:FD:3A:39:24:D8:4E:3B:70:F4:DC"
+            ]
+        }
+    }
+]

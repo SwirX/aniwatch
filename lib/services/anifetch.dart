@@ -343,8 +343,10 @@ Future<List> fetchLinks(sources) async {
 }
 
 Future<String> play(String id, int ep, String mode) async {
+  print("loading link");
   var sources = {};
   try {
+    print("trying to get sources");
     sources = await getSourcesUrl(id, ep);
   } catch (e) {
     var timeout = 5;
@@ -359,6 +361,9 @@ Future<String> play(String id, int ep, String mode) async {
     });
   }
   final linksList = await fetchLinks(sources);
+  print(linksList);
   final link = linksList.first;
+  print("got link");
+  print(link);
   return link;
 }

@@ -1,11 +1,8 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 // ignore: depend_on_referenced_packages
 import 'package:http/http.dart' as http;
-import 'package:android_package_installer/android_package_installer.dart';
-import 'package:open_file/open_file.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 const endpoint = "https://api.github.com/repos/SwirX/aniwatch/releases";
@@ -41,6 +38,7 @@ Future<String?> checkForUpdates() async {
       }
     }
     launchUrlString(apkurl);
+    return "launched";
     // final apkPath = "/sdcard/Download/aniwatch-$version.apk";
     // res = await http.get(Uri.parse(apkurl));
     // final bytes = res.bodyBytes;

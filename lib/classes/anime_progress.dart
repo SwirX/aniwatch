@@ -87,7 +87,9 @@ class EpisodeProgress {
 }
 
 class UserAnimeProgress {
-  final String _progressFilePath = '/data/data/com.aniwatch/user_progress.json';
+  final String _progressFilePath = Platform.operatingSystem == "android"
+      ? '/data/data/com.aniwatch/user_progress.json'
+      : "D:\\Docs\\user_progress.json";
 
   List<Map<String, dynamic>> _progressData = [];
 

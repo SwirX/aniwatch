@@ -120,6 +120,8 @@ Future<List<AnimeSearchResult>> aniSearch(String query) async {
   return animeResults;
 }
 
+
+
 Future<Anime> aniInfo(AnimeSearchResult animeResult) async {
   final malId = animeResult.malId;
   final aniListId = animeResult.anilistId;
