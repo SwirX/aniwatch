@@ -39,7 +39,22 @@ If you prefer not to compile the source code yourself, precompiled binaries (cur
 
 ## CLI Version
 
-For users who prefer a command-line interface (CLI) experience, an alternative CLI program [AniWatch-CLI](https://github.com/SwirX/aniwatch-cli) is available. It provides similar functionality to AniWatch but allows users to watch anime episodes directly from the terminal.
+For users who prefer a command-line interface (CLI) experience, an alternative CLI program [AniWatch-CLI](https://github.com/SwirX/aniwatch-cli) is available. It provides 
+similar functionality to AniWatch but allows users to watch anime episodes directly from the terminal.
+
+<br>
+
+# ⚠️Important Notice⚠️
+This project has been discontinued due to some problems in the code base and how messy it is.
+But worry not there is a new app that continues the (short) legacy of this app
+The new app can be found [here](https://github.com/SwirX/soramai)
+Sorry for any inconvenience that this made, but I assure you that the new project will be much better and worth this sacrifice.
+And I reassure you that the new project will not die as easily as this one.
+Hope that everyone understands🙏.
+
+Happy Streaming!
+
+<br>
 
 ## Contributing
 
