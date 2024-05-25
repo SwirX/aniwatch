@@ -45,14 +45,14 @@ similar functionality to AniWatch but allows users to watch anime episodes direc
 <br>
 
 # ⚠️Important Notice⚠️
-This project has been discontinued due to some problems in the code base and how messy it is.
-But worry not there is a new app that continues the (short) legacy of this app
-The new app can be found [here](https://github.com/SwirX/soramai)
-Sorry for any inconvenience that this made, but I assure you that the new project will be much better and worth this sacrifice.
-And I reassure you that the new project will not die as easily as this one.
-Hope that everyone understands🙏.
+This project has been discontinued due to some problems in the code base and how messy it is.<br>
+But worry not there is a new app that continues the (short) legacy of this app.
+The new app can be found [here](https://github.com/SwirX/soramai)<br>
+Sorry for any inconvenience that this made, but I assure you that the new project will be much better and worth this sacrifice.<br>
+And I reassure you that the new project will not die as easily as this one.<br>
+Hope that everyone understands🙏.<br>
 
-Happy Streaming!
+Happy Streaming!<br>
 
 <br>
 
